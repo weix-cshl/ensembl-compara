@@ -77,7 +77,7 @@ sub param_defaults {
             'ENSEMBL_PARALOGUES'    => 2,
             'ENSEMBL_ORTHOLOGUES'   => 2,
             'ENSEMBL_HOMOEOLOGUES'  => 2,
-        },
+               	},
     }
 }
 
@@ -96,6 +96,12 @@ sub fetch_input {
         foreach my $genome_db_id2 (@{$genome_db_ids}) {
             $self->make_dataflow_if_needed('ENSEMBL_ORTHOLOGUES', [$genome_db_id1, $genome_db_id2]);
         }
+
+        $self->make_dataflow_if_needed('ENSEMBL_PSEUDOGENES_PARALOGUES', [$genome_db_id1]);
+
+        foreach my $genome_db_id2 (@{$genome_db_ids}) {
+            $self->make_dataflow_if_needed('ENSEMBL_PSEUDOGENES_ORTHOLOGUES', [$genome_db_id1, $genome_db_id2]);
+	}
     }
 }
 
@@ -106,7 +112,8 @@ sub make_dataflow_if_needed {
     my $mlss_adaptor = $self->compara_dba->get_MethodLinkSpeciesSetAdaptor;
     my $mlss = $mlss_adaptor->fetch_by_method_link_type_genome_db_ids($method, $genome_db_ids)
                 || die "Could not find the MLSS with the method '$method' and the genome_db_ids ".join('/', @$genome_db_ids)."\n";
-    $self->dataflow_output_id( { 'homo_mlss_id' => $mlss->dbID }, $self->param('methods')->{$method});
+    
+    $self->dataflow_output_id( { 'homo_mlss_id' => $mlss->dbID } , $self->param('methods')->{$method});
 }
 
 1;

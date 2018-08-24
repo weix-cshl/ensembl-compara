@@ -85,7 +85,8 @@ sub pipeline_analyses_goc {
             -parameters => {
                 'methods'   => {
                     'ENSEMBL_ORTHOLOGUES'   => 2,
-                },
+                    'ENSEMBL_PSEUDOGENES_ORTHOLOGUES' => 2,  
+                   },
             },
             -flow_into => {
                 2 => {
