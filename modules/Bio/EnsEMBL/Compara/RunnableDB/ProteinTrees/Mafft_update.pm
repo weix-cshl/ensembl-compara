@@ -72,6 +72,12 @@ sub param_defaults {
 sub fetch_input {
     my ($self) = @_;
 
+    if (defined $self->param('escape_branch') and $self->input_job->retry_count >= 3) {
+        $self->dataflow_output_id(undef, $self->param('escape_branch'));
+        $self->input_job->autoflow(0);
+        $self->complete_early("The MSA failed 3 times. Trying another method.");
+     }
+
     #Get adaptors
     #----------------------------------------------------------------------------------------------------------------------------
     #get compara_dba adaptor
@@ -116,7 +122,8 @@ sub get_msa_command_line {
     #This logic should be replaced by the new method for getting the alignment sequences directly from the adaptor.
     #--------------------------------------------------------------------------------------------------------------
     my $new_seq_file = $self->worker_temp_directory . "/" . $self->param_required('gene_tree_id') . "_new_seq.fasta";
-
+	
+	# my $new_seq_file = "~/myfastafile.fasta";
     my %members_2_b_updated;
     my %members_2_b_added;
     if ( $self->param('current_gene_tree')->has_tag('updated_genes_list') ) {
@@ -131,12 +138,15 @@ sub get_msa_command_line {
 
 	print "members to update:\n" if ( $self->debug );
     my @members_to_print;
+ 	my $seq_member_adaptor = $self->compara_dba->get_SeqMemberAdaptor;
     foreach my $updated_member_stable_id ( keys %members_2_b_updated ) {
-        my $seq_member_adaptor = $self->compara_dba->get_SeqMemberAdaptor;
+       
         my $seq_member = $seq_member_adaptor->fetch_by_stable_id($updated_member_stable_id);
         print "$updated_member_stable_id|".$seq_member->seq_member_id."|".$seq_member->sequence_id."\n" if ( $self->debug );
         push @members_to_print, $seq_member;
+	$self->param('current_gene_tree')->add_Member(bless $seq_member, 'Bio::EnsEMBL::Compara::GeneTreeMember');
     }
+
     Bio::EnsEMBL::Compara::MemberSet->new(-MEMBERS => \@members_to_print)->print_sequences_to_file($new_seq_file, -FORMAT => 'fasta', -ID_TYPE => 'SEQUENCE_ID', -SEQ_TYPE => $self->param('cdna') ? 'cds' : undef);
 
 
