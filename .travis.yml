@@ -69,6 +69,9 @@ jobs:
         - sudo apt-get -y install yamllint shellcheck
         - cpanm --quiet --installdeps --notest --cpanfile ensembl/cpanfile .
         - cpanm --quiet --installdeps --notest .
+        - ls -a
+        - cat ./.travis.yml
+        - yamllint -c ./yamllintrc ./.travis.yml
       script: prove -r ./travisci/all-housekeeping/
 
     - language: perl
